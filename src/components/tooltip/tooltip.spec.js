@@ -1,19 +1,36 @@
 describe('<md-tooltip> directive', function() {
-  var $compile, $rootScope, $animate, $timeout;
+  var $compile, $rootScope, $material, $timeout;
   var element;
 
   beforeEach(module('material.components.tooltip'));
   beforeEach(module('material.components.button'));
-  beforeEach(inject(function(_$compile_, _$rootScope_, _$animate_, _$timeout_){
+  beforeEach(inject(function(_$compile_, _$rootScope_, _$material_, _$timeout_){
     $compile   = _$compile_;
     $rootScope = _$rootScope_;
-    $animate   = _$animate_;
+    $material  = _$material_;
     $timeout   = _$timeout_;
   }));
   afterEach(function() {
     // Make sure to remove/cleanup after each test
     element && element.scope().$destroy();
     element = undefined;
+  });
+
+  it('should support dynamic directions', function() {
+    var error;
+
+    try {
+      buildTooltip(
+        '<md-button>' +
+        'Hello' +
+        '<md-tooltip md-direction="{{direction}}">Tooltip</md-tooltip>' +
+        '</md-button>'
+      );
+    } catch(e) {
+      error = e;
+    }
+
+    expect(error).toBe(undefined);
   });
 
   it('should preserve parent text', function(){
@@ -24,7 +41,7 @@ describe('<md-tooltip> directive', function() {
         '</md-button>'
       );
 
-      expect(element.attr('aria-label')).toBeUndefined();
+      expect(element.attr('aria-label')).toBe("Hello");
   });
 
   it('should label parent', function(){
@@ -97,7 +114,6 @@ describe('<md-tooltip> directive', function() {
         '</md-button>'
       );
 
-
       showTooltip(true);
 
       expect(findTooltip().length).toBe(1);
@@ -142,7 +158,7 @@ describe('<md-tooltip> directive', function() {
       expect($rootScope.testModel.isVisible).toBe(false);
     });
 
-    it('should set visible on touchstart and touchend', function() {
+    xit('should set visible on touchstart and touchend', function() {
       buildTooltip(
         '<md-button>' +
           'Hello' +
@@ -208,6 +224,59 @@ describe('<md-tooltip> directive', function() {
       triggerEvent('focus');
       expect($rootScope.testModel.isVisible).toBe(false);
     }));
+
+    xdescribe('<md-tooltip> attributeObserver', function() {
+      if (window.MutationObserver === undefined) {
+        // PhantomJS doesn't support mo
+        return it(' does not work without support for mutationObservers', function () {
+          expect(true).toBe(true);
+        });
+      }
+      var obs;
+      beforeEach(function (mutationDone){
+        obs =  new MutationObserver(function(mutations) {
+          mutations
+            .forEach(function (mutation) {
+              if (mutation.attributeName === 'disabled' && mutation.target.disabled) {
+                // allow a little time for the observer on the tooltip to finish
+                setTimeout(function() {
+                  $timeout.flush();
+                  $material.flushOutstandingAnimations();
+                  mutationDone();
+                },50);
+              }
+            })
+          });
+
+        var el = buildTooltip(
+          '<md-button>' +
+            'Hello' +
+            '<md-tooltip md-visible="testModel.isVisible">' +
+              'Tooltip' +
+            '</md-tooltip>' +
+          '</md-button>'
+        );
+
+        showTooltip(true);
+        // attach the observer
+        // trigger the mutationObserver(s).
+        obs.observe(el[0], { attributes: true});
+        el.attr('disabled',true)
+      });
+
+      afterEach(function () {
+        // remove observer from dom.
+        obs && obs.disconnect();
+        obs = null;
+      })
+
+      it('should be hidden after element gets disabled',  function() {
+        expect($rootScope.testModel.isVisible).toBe(false)
+        expect(findTooltip().length).toBe(0);
+      })
+    });
+
+
   });
 
   // ******************************************************
@@ -220,7 +289,7 @@ describe('<md-tooltip> directive', function() {
     $rootScope.testModel = {};
 
     $rootScope.$apply();
-    $animate.triggerCallbacks();
+    $material.flushOutstandingAnimations();
 
     return element;
   }
@@ -229,7 +298,7 @@ describe('<md-tooltip> directive', function() {
     if (angular.isUndefined(isVisible)) isVisible = true;
 
     $rootScope.$apply('testModel.isVisible = ' + (isVisible ? 'true' : 'false') );
-    $animate.triggerCallbacks();
+    $material.flushOutstandingAnimations();
   }
 
   function findTooltip() {

@@ -25,6 +25,19 @@ describe('mdProgressCircular', function() {
     expect(progress.attr('md-mode')).toEqual('indeterminate');
   }));
 
+  it('should trim the md-mode value', inject(function($compile, $rootScope, $mdConstant) {
+    element = $compile('<div>' +
+          '<md-progress-circular md-mode=" indeterminate"></md-progress-circular>' +
+          '</div>')($rootScope);
+
+    $rootScope.$apply(function() {
+      $rootScope.progress = 50;
+    });
+
+    var progress = element.find('md-progress-circular');
+    expect(progress.attr('md-mode')).toEqual('indeterminate');
+  }));
+
   it('should auto-set the md-mode to "determinate" if not specified but has value', inject(function($compile, $rootScope, $mdConstant) {
     var element = $compile('<div>' +
       '<md-progress-circular value="{{progress}}"></md-progress-circular>' +
@@ -57,7 +70,9 @@ describe('mdProgressCircular', function() {
 
   it('should set scaling using percentage values',function() {
     var progress = buildIndicator('<md-progress-circular md-diameter="25%"></md-progress-circular>');
-    expect( getScale(progress) ).toBe(0.25);
+    expect( getScale(progress[0].children[0]) ).toBe(0.25);
+    expect(progress.css('width')).toBe('25px');
+    expect(progress.css('height')).toBe('25px');
   });
 
   it('should set scaling using pixel values', function() {
@@ -66,7 +81,7 @@ describe('mdProgressCircular', function() {
     var progress = buildIndicator('<md-progress-circular md-diameter="37px"></md-progress-circular>');
     var value = Math.round( (37 / DEFAULT_SIZE) * 100 )/100;
 
-    expect( getScale(progress) ).toBe(value);
+    expect( getScale(progress[0].children[0]) ).toBe(value);
   });
 
   /**

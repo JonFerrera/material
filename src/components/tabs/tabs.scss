@@ -3,15 +3,9 @@ $tabs-tab-width: $baseline-grid * 12 !default;
 $tabs-header-height: 48px !default;
 
 @keyframes md-tab-content-hide {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 md-tab-data {
@@ -35,12 +29,14 @@ md-tabs {
     min-height: 200 + $tabs-header-height;
   }
   &[md-align-tabs="bottom"] {
+    padding-bottom: $tabs-header-height;
     md-tabs-wrapper {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
       height: $tabs-header-height;
+      z-index: 2;
     }
     md-tabs-content-wrapper {
       top: 0;
@@ -79,6 +75,8 @@ md-tabs {
 md-tabs-wrapper {
   display: block;
   position: relative;
+  // transform is needed for iOS Safari to prevent content from disappearing on scroll
+  transform: translate3d(0, 0, 0);
   md-prev-button, md-next-button {
     height: 100%;
     width: $tabs-paginator-width;
@@ -168,7 +166,6 @@ md-pagination-wrapper {
   &.md-center-tabs {
     position: relative;
     width: initial;
-    flex: 1;
     margin: 0 auto;
   }
 }
@@ -190,9 +187,10 @@ md-tab-content {
   left: 0;
   right: 0;
   bottom: 0;
-  transform: translateX(0);
   transition: transform $swift-ease-in-out-duration $swift-ease-in-out-timing-function;
   overflow: auto;
+  // transform is needed for iOS Safari to prevent content from disappearing on scroll
+  transform: translate3d(0, 0, 0);
   &.md-no-scroll {
     bottom: auto;
     overflow: hidden;
@@ -200,7 +198,7 @@ md-tab-content {
   &.ng-leave, &.md-no-transition {
     transition: none;
   }
-  &.md-left {
+  &.md-left:not(.md-active) {
     transform: translateX(-100%);
     animation: 2 * $swift-ease-in-out-duration md-tab-content-hide;
     opacity: 0;
@@ -210,7 +208,7 @@ md-tab-content {
       visibility: hidden;
     }
   }
-  &.md-right {
+  &.md-right:not(.md-active) {
     transform: translateX(100%);
     animation: 2 * $swift-ease-in-out-duration md-tab-content-hide;
     opacity: 0;
@@ -226,18 +224,20 @@ md-tab-content {
 }
 
 md-ink-bar {
+  $duration: $swift-ease-in-out-duration * 0.5;
+  $multiplier: 0.5;
   position: absolute;
   left: auto;
   right: auto;
   bottom: 0;
   height: 2px;
   &.md-left {
-    transition: left ($swift-ease-in-out-duration * 0.45) $swift-ease-in-out-timing-function,
-        right $swift-ease-in-out-duration $swift-ease-in-out-timing-function;
+    transition: left ($duration * $multiplier) $swift-ease-in-out-timing-function,
+        right $duration $swift-ease-in-out-timing-function;
   }
   &.md-right {
-    transition: left $swift-ease-in-out-duration $swift-ease-in-out-timing-function,
-        right ($swift-ease-in-out-duration * 0.45) $swift-ease-in-out-timing-function;
+    transition: left $duration $swift-ease-in-out-timing-function,
+        right ($duration * $multiplier) $swift-ease-in-out-timing-function;
   }
 }
 
